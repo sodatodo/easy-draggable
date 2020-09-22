@@ -21,7 +21,10 @@ const eventsFor = {
   },
 };
 
-function DraggableCore({ ref, children, onMouseDown: propsOnMouseDown }:
+// 默认的鼠标事件
+let dragEventFor = eventsFor.mouse;
+
+function DraggableCore({ ref, children, onMouseDown: propsOnMouseDown, allowAnyClick, disabled }:
   {
     onMouseDown?: Function,
     ref: React.MutableRefObject<HTMLElement>,
@@ -29,7 +32,7 @@ function DraggableCore({ ref, children, onMouseDown: propsOnMouseDown }:
   }) {
   console.log('ref :>> ', ref);
   const onTouchStart: EventListener = function (event: Event) {
-    console.log('event :>> ', event);
+    console.log('ontouchstart: ', event);
   };
   const rootRef = useRef(null);
   useEffect(() => {
@@ -45,18 +48,51 @@ function DraggableCore({ ref, children, onMouseDown: propsOnMouseDown }:
     });
   }, [rootRef]);
 
-  const handleDragStart = (event: Event) => {
+  const handleDrag: EventListener = (event: Event) => {
+    console.log('handle drag', event);
+  };
+
+  const handleDragStart = (event: MouseEvent) => {
     if (propsOnMouseDown) {
       propsOnMouseDown(event);
     }
+    // 只接受鼠标左键 event.button === 0 表示鼠标左键 event.button === 2 表示鼠标右键 event.button === 1 表示点击鼠标滚轮
+    if (
+      true// allowAnyClick
+      && typeof event.button === 'number'
+      && event.button !== 0
+    ) return false;
+    // if (allowAnyClick && typeof event.button === 'number' && event.button !== 0) return false;
+
+    const rootNode = rootRef.current;
+    if (!rootNode || !rootNode.ownerDocument || !rootNode.ownerDocument.body) {
+      throw new Error('<DraggableCore> not mounted on DragStart!');
+    }
+    const { ownerDocument } = rootNode;
+    console.log('ownerDocument :>> ', ownerDocument);
+
+    console.log('event.type :>> ', event.type);
+    addEvent(ownerDocument, dragEventFor.move, handleDrag);
+    return false;
   };
 
-  const onMouseDown = (event: Event) => {
-    console.log('onMouseDown: ', event);
-    handleDragStart(event);
+  const handleDragStop = (event: MouseEvent) => {
+    dragEventFor = eventsFor.mouse;
+    const rootNode = rootRef.current;
+    if (rootNode) {
+      const { ownerDocument } = rootNode;
+      removeEvent(ownerDocument, dragEventFor.move, handleDrag);
+      removeEvent(ownerDocument, dragEventFor.stop, handleDrag);
+    }
   };
-  const onMouseUp = (event: Event) => {
-    console.log('onMouseUp: ', event);
+
+  const onMouseDown = (event: MouseEvent) => {
+    dragEventFor = eventsFor.mouse;
+    return handleDragStart(event);
+  };
+  const onMouseUp = (event: MouseEvent) => {
+    dragEventFor = eventsFor.mouse;
+    return handleDragStop(event);
   };
 
   const singleChildren: any = React.Children.only(children);
