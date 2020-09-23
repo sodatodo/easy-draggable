@@ -31,8 +31,9 @@ function DraggableCore({ ref, children, onMouseDown: propsOnMouseDown, allowAnyC
     children: React.ReactNode,
   }) {
   console.log('ref :>> ', ref);
-  const onTouchStart: EventListener = function (event: Event) {
-    console.log('ontouchstart: ', event);
+  const onTouchStart: EventListener = function (event: TouchEvent) {
+    dragEventFor = eventsFor.touch;
+    return handleDragStart(event);
   };
   const rootRef = useRef(null);
   useEffect(() => {
@@ -52,7 +53,7 @@ function DraggableCore({ ref, children, onMouseDown: propsOnMouseDown, allowAnyC
     console.log('handle drag', event);
   };
 
-  const handleDragStart = (event: MouseEvent) => {
+  const handleDragStart = (event: MouseEvent | TouchEvent) => {
     if (propsOnMouseDown) {
       propsOnMouseDown(event);
     }
@@ -62,7 +63,6 @@ function DraggableCore({ ref, children, onMouseDown: propsOnMouseDown, allowAnyC
       && typeof event.button === 'number'
       && event.button !== 0
     ) return false;
-    // if (allowAnyClick && typeof event.button === 'number' && event.button !== 0) return false;
 
     const rootNode = rootRef.current;
     if (!rootNode || !rootNode.ownerDocument || !rootNode.ownerDocument.body) {
@@ -72,8 +72,9 @@ function DraggableCore({ ref, children, onMouseDown: propsOnMouseDown, allowAnyC
     console.log('ownerDocument :>> ', ownerDocument);
 
     console.log('event.type :>> ', event.type);
+    if (event.type === 'touchstart') event.preventDefault();
     addEvent(ownerDocument, dragEventFor.move, handleDrag);
-    return false;
+    // return false;
   };
 
   const handleDragStop = (event: MouseEvent) => {
