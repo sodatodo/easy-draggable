@@ -172,9 +172,7 @@ const DraggableCore = React.forwardRef<HTMLElement, DraggableCoreProps>((props, 
 
     // }
     console.log('coreEvent :>> ', coreEvent);
-    if (props.onDrag) {
-      props.onDrag(event, coreEvent);
-    }
+    props.onDrag(event, coreEvent);
     setRefLastPosition({
       lastX: x,
       lastY: y,
@@ -291,6 +289,7 @@ const DraggableCore = React.forwardRef<HTMLElement, DraggableCoreProps>((props, 
 DraggableCore.propTypes = {
   children: PropTypes.node.isRequired,
   onStart: PropTypes.func.isRequired,
+  onDrag: PropTypes.func.isRequired,
   grid: PropTypes.arrayOf(PropTypes.number),
   // offsetParent: PropTypes.object
 };
