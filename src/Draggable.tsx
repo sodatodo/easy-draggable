@@ -20,8 +20,14 @@ const Draggable = React.forwardRef<HTMLElement, DraggableProps>((props, ref) => 
   const { children } = props;
   const singleChildren = React.Children.only(children);
   const eventHandler = {};
+  const onDragStart = () => {
+    console.log('sodalog on drag start');
+  };
+  const onDragStop = () => { };
+  const onDrag = () => { };
+
   return (
-    <DraggableCore ref={ref}>
+    <DraggableCore ref={ref} onStart={onDragStart} onDrag={onDrag} onStop={onDragStop}>
       {React.cloneElement(singleChildren, eventHandler)}
     </DraggableCore>
   );

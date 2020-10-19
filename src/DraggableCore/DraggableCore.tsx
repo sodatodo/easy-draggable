@@ -5,14 +5,18 @@ import React, {
   useEffect,
   useRef,
   RefObject,
+  EventHandler,
 } from 'react';
 import PropTypes from 'prop-types';
 // import ReactDOM from 'react-dom';
-import { addEvent, removeEvent } from './utils/domFns';
+import { addEvent, removeEvent } from '../utils/domFns';
 
 interface DraggableCoreProps {
   ref?: RefObject<HTMLElement>;
-  children: any
+  children: any,
+  onStart: EventListener,
+  onStop: EventListener,
+  onDrag: EventListener,
 }
 
 const eventsFor = {
@@ -29,7 +33,7 @@ const eventsFor = {
 };
 
 // 默认的鼠标事件
-const dragEventFor = eventsFor.mouse;
+let dragEventFor = eventsFor.mouse;
 
 // function DraggableCore({
 //   ref, children, onMouseDown: propsOnMouseDown, allowAnyClick, disabled,
@@ -129,8 +133,45 @@ const DraggableCore = React.forwardRef<HTMLElement, DraggableCoreProps>((props, 
     console.log('rootRef.current :>> ', findRootDOM());
   }, []);
 
+  const handleDragStart = (event: MouseEvent | TouchEvent) => {
+    console.log('handle Drag Start');
+    const { onStart } = props;
+    if (onStart) {
+      onStart(event);
+    }
+    // 只接受鼠标左键 event.button === 0 表示鼠标左键 event.button === 2 表示鼠标右键 event.button === 1 表示点击鼠标滚轮
+    if (event instanceof MouseEvent) {
+      const { button } = event;
+      // 如果不算鼠标主键 则不作处理 这里主键认定为鼠标左键,后续可根据配置进行变更
+      const aboveKey = 0;
+      if (button && button !== aboveKey) {
+        return false;
+      }
+      const rootNode = rootRef.current;
+      if (!rootNode || !rootNode.ownerDocument || !rootNode.ownerDocument.body) {
+        throw new Error('<DraggableCore> not mounted on DragStart!');
+      }
+
+      const { ownerDocument } = rootNode;
+      console.log('ownerDocument :>> ', ownerDocument);
+
+      console.log('event.type :>> ', event.type);
+      if (event.type === 'touchstart') event.preventDefault();
+      // addEvent(ownerDocument, dragEventFor.move, handleDrag);
+    }
+
+    return false;
+  };
+  // 鼠标按下后通知上层 并开始监听 移动事件
+  const onMouseDown = (event: MouseEvent) => {
+    dragEventFor = eventsFor.mouse;
+    console.log('dragEventFor :>> ', dragEventFor);
+    return handleDragStart(event);
+  };
+
   const eventHandler = {
     ref: ref || rootRef,
+    onMouseDown,
   };
 
   const findRootDOM = (): HTMLElement => {
@@ -156,6 +197,7 @@ const DraggableCore = React.forwardRef<HTMLElement, DraggableCoreProps>((props, 
 
 DraggableCore.propTypes = {
   children: PropTypes.node.isRequired,
+  onStart: PropTypes.func.isRequired,
 };
 
 DraggableCore.displayName = 'EasyDraggableCore';
