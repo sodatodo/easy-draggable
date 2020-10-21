@@ -9,13 +9,14 @@ import PropTypes from 'prop-types';
 // import ReactDOM from 'react-dom';
 import { addEvent, removeEvent, getTouchIdentifier } from '../utils/domFns';
 import { createCoreData, getControlPosition, snapToGrid } from '../utils/positionFns';
+import { DraggableEventHandler } from '../utils/types';
 
 interface DraggableCoreProps {
   ref?: RefObject<HTMLElement>;
   children: any,
-  onStart: EventListener,
-  onStop: EventListener,
-  onDrag: EventListener,
+  onStart: DraggableEventHandler,
+  onStop: DraggableEventHandler,
+  onDrag: DraggableEventHandler,
   offsetParent?: Element,
   grid?: number[],
 }
@@ -140,6 +141,12 @@ const DraggableCore = React.forwardRef<HTMLElement, DraggableCoreProps>((props, 
     setLastPosition(newPosition);
   };
 
+  const refDragging = useRef(dragging);
+  const setRefDragging = (dragging: boolean) => {
+    refDragging.current = dragging;
+    setDragging(dragging);
+  };
+
   useEffect(() => {
     setMounted(true);
 
@@ -191,7 +198,7 @@ const DraggableCore = React.forwardRef<HTMLElement, DraggableCoreProps>((props, 
       lastX: NaN,
       lastY: NaN,
     });
-    setDragging(false);
+    setRefDragging(false);
   };
   // 获取`position`
   const getPositon = (event: any) => {
@@ -208,10 +215,6 @@ const DraggableCore = React.forwardRef<HTMLElement, DraggableCoreProps>((props, 
   };
   const handleDragStart = (event: MouseEvent | TouchEvent) => {
     const { onStart } = props;
-    if (onStart) {
-      onStart(event);
-    }
-
     // 只接受鼠标左键 event.button === 0 表示鼠标左键 event.button === 2 表示鼠标右键 event.button === 1 表示点击鼠标滚轮
     if ('button' in event) {
       if (event.type === 'touchstart') event.preventDefault();
@@ -229,21 +232,24 @@ const DraggableCore = React.forwardRef<HTMLElement, DraggableCoreProps>((props, 
       const { ownerDocument } = rootNode;
 
       const position = getPositon(event);
+      const { x, y } = position;
+      const { lastX, lastY } = refLastPosition.current;
+      const coreEvent = createCoreData(findRootDOM(), lastX, lastY, x, y);
+
+      const shouldUpdate = onStart(event, coreEvent);
+      console.log('shouldUpdate :>> ', shouldUpdate);
 
       // const shouldUpdate = this.props.onStart(event, )
       // 向上层透传事件
-      const { x, y } = position;
-      setLastPosition({
+      // const { x, y } = position;
+      setRefLastPosition({
         lastX: x,
         lastY: y,
       });
-      setDragging(true);
+      setRefDragging(true);
 
       console.log('position on drag start :>> ', position);
       addEvent(ownerDocument, dragEventFor.move, handleDrag);
-      // ownerDocument.addEventListener('mousemove', (lastPosition) => {
-      //   console.log('custom lastPosition :>> ', lastPosition);
-      // });
       addEvent(ownerDocument, dragEventFor.stop, handleDragStop);
     }
 
