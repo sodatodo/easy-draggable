@@ -4,12 +4,15 @@ import React, {
   useRef,
   RefObject,
   useState,
+  memo,
+  useCallback,
 } from 'react';
 import PropTypes from 'prop-types';
 // import ReactDOM from 'react-dom';
 import { addEvent, removeEvent, getTouchIdentifier } from '../utils/domFns';
 import { createCoreData, getControlPosition, snapToGrid } from '../utils/positionFns';
 import { DraggableEventHandler } from '../utils/types';
+import { applyState } from '../apply';
 
 interface DraggableCoreProps {
   ref?: RefObject<HTMLElement>;
@@ -130,16 +133,17 @@ const DraggableCore = React.forwardRef<HTMLElement, DraggableCoreProps>((props, 
   const singleChildren = React.Children.only(children);
   const rootRef: React.MutableRefObject<HTMLElement> = useRef(null);
 
-  const [lastPosition, setLastPosition] = useState({ lastX: NaN, lastY: NaN });
+  // const [lastPosition, setLastPosition] = useState({ lastX: NaN, lastY: NaN });
+  const [getLastPosition, setLastPosition] = applyState({ lastX: NaN, lastY: NaN });
   const [dragging, setDragging] = useState(false);
   const [mounted, setMounted] = useState(false);
 
   // 以下方法用于解决动态添加事件监听函数导致的 处理方法内无法获取 state的问题
-  const refLastPosition = useRef(lastPosition);
-  const setRefLastPosition = (newPosition: { lastX: number, lastY: number }) => {
-    refLastPosition.current = newPosition;
-    setLastPosition(newPosition);
-  };
+  // const refLastPosition = useRef(lastPosition);
+  // const setRefLastPosition = (newPosition: { lastX: number, lastY: number }) => {
+  //   refLastPosition.current = newPosition;
+  //   setLastPosition(newPosition);
+  // };
 
   const refDragging = useRef(dragging);
   const setRefDragging = (dragging: boolean) => {
@@ -156,13 +160,13 @@ const DraggableCore = React.forwardRef<HTMLElement, DraggableCoreProps>((props, 
   }, []);
 
   // console.log('out lastPosition :>> ', lastPosition);
-  const handleDrag = (event: any) => {
+  const handleDrag = useCallback((event: any) => {
     // console.log('on Drag event :>> ', event);
     const position = getPositon(event);
     if (position === null) return;
     let { x, y } = position;
 
-    const { lastX, lastY } = refLastPosition.current;
+    const { lastX, lastY } = getLastPosition();
 
     if (Array.isArray(grid)) {
       console.log('enter array handler');
@@ -178,14 +182,14 @@ const DraggableCore = React.forwardRef<HTMLElement, DraggableCoreProps>((props, 
     // if (mounted === false) {
 
     // }
-    console.log('coreEvent :>> ', coreEvent);
+    // console.log('coreEvent :>> ', coreEvent);
     props.onDrag(event, coreEvent);
-    setRefLastPosition({
+    setLastPosition({
       lastX: x,
       lastY: y,
     });
-  };
-  const handleDragStop = (event: any) => {
+  }, []);
+  const handleDragStop = useCallback((event: any) => {
     // console.log('event :>> ', event);
     // console.log('sodalog handle stop');
     const { ownerDocument } = findRootDOM();
@@ -194,14 +198,14 @@ const DraggableCore = React.forwardRef<HTMLElement, DraggableCoreProps>((props, 
       removeEvent(ownerDocument, dragEventFor.stop, handleDragStop);
     }
 
-    setRefLastPosition({
+    setLastPosition({
       lastX: NaN,
       lastY: NaN,
     });
     setRefDragging(false);
-  };
+  }, []);
   // 获取`position`
-  const getPositon = (event: any) => {
+  const getPositon = useCallback((event: any) => {
     const touchIdentifier = getTouchIdentifier();
     let propsOffsetParent = null;
     if ('offsetParent' in props) {
@@ -212,8 +216,8 @@ const DraggableCore = React.forwardRef<HTMLElement, DraggableCoreProps>((props, 
       event, propsOffsetParent, findRootDOM(), 1, touchIdentifier,
     );
     return position;
-  };
-  const handleDragStart = (event: MouseEvent | TouchEvent) => {
+  }, []);
+  const handleDragStart = useCallback((event: MouseEvent | TouchEvent) => {
     const { onStart } = props;
     // 只接受鼠标左键 event.button === 0 表示鼠标左键 event.button === 2 表示鼠标右键 event.button === 1 表示点击鼠标滚轮
     if ('button' in event) {
@@ -233,7 +237,7 @@ const DraggableCore = React.forwardRef<HTMLElement, DraggableCoreProps>((props, 
 
       const position = getPositon(event);
       const { x, y } = position;
-      const { lastX, lastY } = refLastPosition.current;
+      const { lastX, lastY } = getLastPosition();
       const coreEvent = createCoreData(findRootDOM(), lastX, lastY, x, y);
 
       const shouldUpdate = onStart(event, coreEvent);
@@ -242,7 +246,7 @@ const DraggableCore = React.forwardRef<HTMLElement, DraggableCoreProps>((props, 
       // const shouldUpdate = this.props.onStart(event, )
       // 向上层透传事件
       // const { x, y } = position;
-      setRefLastPosition({
+      setLastPosition({
         lastX: x,
         lastY: y,
       });
@@ -254,16 +258,16 @@ const DraggableCore = React.forwardRef<HTMLElement, DraggableCoreProps>((props, 
     }
 
     return false;
-  };
+  }, []);
   // 鼠标按下后通知上层 并开始监听 移动事件
-  const onMouseDown = (event: MouseEvent) => {
+  const onMouseDown = useCallback((event: MouseEvent) => {
     dragEventFor = eventsFor.mouse;
     return handleDragStart(event);
-  };
-  const onMouseUp = (event: MouseEvent) => {
+  }, []);
+  const onMouseUp = useCallback((event: MouseEvent) => {
     dragEventFor = eventsFor.mouse;
     return handleDragStop(event);
-  };
+  }, []);
 
   const eventHandler = {
     ref: ref || rootRef,
@@ -271,17 +275,18 @@ const DraggableCore = React.forwardRef<HTMLElement, DraggableCoreProps>((props, 
     onMouseUp,
   };
 
-  const findRootDOM = (): HTMLElement => {
+  const findRootDOM = useCallback((): HTMLElement => {
     if (ref && 'current' in ref) {
       // console.log('sodalog return out side current');
       return ref.current;
     }
     return rootRef.current;
-  };
+  }, []);
 
   const handleClick = () => {
     console.log('findRootDOM() :>> ', findRootDOM());
   };
+  console.log('render core');
   return (
     <div>
       <button onClick={handleClick}>
@@ -310,4 +315,4 @@ DraggableCore.displayName = 'EasyDraggableCore';
 //   HTMLDivElement
 // >;
 
-export default DraggableCore;
+export default memo(DraggableCore);

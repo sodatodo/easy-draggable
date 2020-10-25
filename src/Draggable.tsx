@@ -1,5 +1,5 @@
 import React, {
-  RefObject, useRef, useState,
+  RefObject, useCallback, useRef, useState,
 } from 'react';
 import PropTypes from 'prop-types';
 import DraggableCore from './DraggableCore';
@@ -11,13 +11,7 @@ import {
 } from './utils/positionFns';
 import { Direction } from './constant/direction';
 import { createCSSTransform } from './utils/domFns';
-// function Draggable({ ...draggableCoreProps }) {
-//   return (
-//     <DraggableCore {...draggableCoreProps}>
-//       <div>Draggable</div>
-//     </DraggableCore>
-//   );
-// }
+import { applyState } from './apply';
 
 interface DraggableProps {
   children: any;
@@ -34,6 +28,8 @@ interface DraggableProps {
 }
 
 const Draggable = React.forwardRef<HTMLElement, DraggableProps>((props, ref) => {
+  // const [getState, setState] = applyState({ x: 0, y: 0 });
+  // const [getCurrentState, setCurrentState] = applyState({ z: 0, e: 0 });
   const [dragging, setDragging] = useState(false);
   const refDragging = useRef(dragging);
   const setRefDragging = (value: boolean) => {
@@ -50,30 +46,41 @@ const Draggable = React.forwardRef<HTMLElement, DraggableProps>((props, ref) => 
     children, grid, onStart, position, defaultPosition, axis, positionOffset, scale, bounds,
   } = props;
   const controlled = Boolean(position);
-  const [x, setX] = useState(controlled ? position.x : defaultPosition.x);
-  const [y, setY] = useState(controlled ? position.y : defaultPosition.y);
-  const refX = useRef(x);
-  const setRefX = (value: number) => {
-    refX.current = value;
-    setX(value);
-  };
+  // const [draggablePosition, setDraggablePosition] = useState(
+  //   controlled ? position : defaultPosition,
+  // );
+  const [getDraggablePosition, setDraggablePosition] = applyState(
+    controlled ? position : defaultPosition,
+  );
+  const [getFrameId, setFrameId] = applyState(null);
+  // const [x, setX] = useState(controlled ? position.x : defaultPosition.x);
+  // const [y, setY] = useState(controlled ? position.y : defaultPosition.y);
+  // const refDraggablePosition = useRef(draggablePosition);
+  // const setRefDraggablePosition = (position: Position) => {
+  //   refDraggablePosition.current = position;
+  //   setDraggablePosition(position);
+  // };
+  // const refX = useRef(x);
+  // const setRefX = (value: number) => {
+  //   refX.current = value;
+  //   setX(value);
+  // };
 
-  const refY = useRef(y);
-  const setRefY = (value: number) => {
-    refY.current = value;
-    setY(value);
-  };
+  // const refY = useRef(y);
+  // const setRefY = (value: number) => {
+  //   refY.current = value;
+  //   setY(value);
+  // };
 
   const [slackX, setSlackX] = useState(0);
   const [slackY, setSlackY] = useState(0);
 
   const singleChildren = React.Children.only(children);
 
-  // eslint-disable-next-line consistent-return
-  const onDragStart: DraggableEventHandler = (event, draggableCoreData) => {
-    console.log('on drag starrt');
-    const x = refX.current;
-    const y = refY.current;
+  const onDragStart: DraggableEventHandler = useCallback((event, draggableCoreData) => {
+    // const x = refX.current;
+    // const y = refY.current;
+    const { x, y } = getDraggablePosition();
     const draggableData = createDraggableData(x, y, scale, draggableCoreData);
     let shouldStart = true;
     if (onStart) {
@@ -82,28 +89,28 @@ const Draggable = React.forwardRef<HTMLElement, DraggableProps>((props, ref) => 
       }
     }
     if (shouldStart === false) return false;
-    console.log('set ref dragging');
     setRefDragging(true);
     setRefDragged(true);
-  };
-  const onDragStop: DraggableEventHandler = (event, draggableCoreData) => {
-    console.log('event :>> ', event);
-    console.log('draggableData :>> ', draggableCoreData);
-  };
-  const onDrag: DraggableEventHandler = (event, draggableCoreData) => {
+  }, []);
+  const onDragStop: DraggableEventHandler = useCallback((event, draggableCoreData) => {
+  }, []);
+  const onDrag: DraggableEventHandler = useCallback((event, draggableCoreData) => {
     if (!refDragging.current) return false;
-    const x = refX.current;
-    const y = refY.current;
-    console.log('draggableCoreData :>> ', draggableCoreData);
+
+    // const { x, y } = refDraggablePosition.current;
+    const { x, y } = getDraggablePosition();
     const uiData = createDraggableData(x, y, scale, draggableCoreData);
-    console.log('uiData :>> ', uiData);
+
+    const transformOpts = {
+      x: (canDragX(axis) && draggable) ? x : validPosition.x,
+      y: (canDragY(axis) && draggable) ? y : validPosition.y,
+    };
     // const newState = {
     //   x: uiData.x,
     //   y: uiData.y,
     // };
     let newStateX = uiData.x;
     let newStateY = uiData.y;
-    console.log('newStateX, newStateY :>> ', newStateX, newStateY);
 
     let newSlackX = slackX;
     let newSlackY = slackY;
@@ -118,7 +125,6 @@ const Draggable = React.forwardRef<HTMLElement, DraggableProps>((props, ref) => 
       [newStateX, newStateY] = getBoundPosition(
         draggableCoreData.node, bounds, newStateX, newStateY,
       );
-      console.log('newStateX :>> ', newStateX);
 
       newSlackX = slackX + (originX - newStateX);
       newSlackY = slackY + (originY - newStateY);
@@ -128,29 +134,63 @@ const Draggable = React.forwardRef<HTMLElement, DraggableProps>((props, ref) => 
       uiData.deltaX = newStateX - x;
       uiData.deltaY = newStateY - y;
     }
-    console.log('uiData :>> ', uiData);
     if (props.onDrag) {
       const shouldUpdate = props.onDrag(event, uiData);
     }
-    setRefX(newStateX);
-    setRefY(newStateY);
+    // setRefX(newStateX);
+    // setRefY(newStateY);
+    // setRefDraggablePosition({
+    //   x: newStateX,
+    //   y: newStateY,
+    // });
+    const style = createCSSTransform(transformOpts, positionOffset);
+    const elementProps = {
+      style: { ...children.props.style, ...style },
+    };
+    // console.log('draggableCoreData.node :>> ', draggableCoreData.node);
+    // console.log('style :>> ', style.transform);
+    setDraggablePosition({
+      x: newStateX,
+      y: newStateY,
+    });
+    
+    let frameId = getFrameId();
+    if (frameId) {
+      console.log('阻止无效的刷新');
+      return false;
+    }
+    draggableCoreData.node.style.transform = style.transform;
+
+    frameId = requestAnimationFrame(() => {
+      setFrameId(null);
+    });
+    setFrameId(frameId);
+    
+    // setState({
+    //   x: newStateX,
+    //   y: newStateY,
+    // });
+    // setCurrentState({
+    //   z: newStateX + 1,
+    //   e: newStateY + 1,
+    // });
     // if (shouldUpdate === false) return false;
-  };
+  }, []);
 
   const draggable = !controlled || dragging;
   const validPosition = position || defaultPosition;
-  console.log('validPosition :>> ', validPosition);
+
+  const { x, y } = getDraggablePosition();
   const transformOpts = {
     x: (canDragX(axis) && draggable) ? x : validPosition.x,
     y: (canDragY(axis) && draggable) ? y : validPosition.y,
   };
-  console.log('transformOpts :>> ', transformOpts);
   let style = {};
   style = createCSSTransform(transformOpts, positionOffset);
-  console.log('style :>> ', style);
   const elementProps = {
     style: { ...children.props.style, ...style },
   };
+  console.log('render draggable');
   return (
     <DraggableCore ref={ref} onStart={onDragStart} onDrag={onDrag} onStop={onDragStop} grid={grid}>
       {React.cloneElement(singleChildren, elementProps)}
@@ -167,7 +207,6 @@ const Draggable = React.forwardRef<HTMLElement, DraggableProps>((props, ref) => 
 //   const coreStyle = {
 //     className,
 //   };
-//   console.log('typeof ref :>> ', typeof ref);
 //   return (
 //     <DraggableCore>
 //       {React.cloneElement(singleChildren, coreEventHanlder, coreStyle)}

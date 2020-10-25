@@ -25,7 +25,7 @@ function DraggableTest() {
     <div>
       <Draggable ref={ref} >
         <div className="box">
-          <ReactEcharts option={option} />
+          {/* <ReactEcharts option={option} /> */}
         </div>
       </Draggable>
       {/* <Draggable ref={ref} >
