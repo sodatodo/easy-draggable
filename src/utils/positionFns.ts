@@ -122,11 +122,13 @@ export function getBoundPosition(
         + int(boundNodeStyle.paddingBottom) - int(nodeStyle.marginBottom),
     };
   }
-  if (isNum(bounds.right)) newX = Math.min(x, copyBounds.right);
-  if (isNum(bounds.bottom)) newY = Math.min(y, copyBounds.bottom);
+  if (typeof bounds !== 'string' && typeof copyBounds !== 'string') {
+    if (isNum(bounds.right)) newX = Math.min(x, copyBounds.right);
+    if (isNum(bounds.bottom)) newY = Math.min(y, copyBounds.bottom);
 
-  if (isNum(bounds.left)) newX = Math.max(x, copyBounds.left);
-  if (isNum(bounds.top)) newY = Math.max(y, copyBounds.top);
+    if (isNum(bounds.left)) newX = Math.max(newX, copyBounds.left);
+    if (isNum(bounds.top)) newY = Math.max(newY, copyBounds.top);
+  }
 
   return [newX, newY];
 }

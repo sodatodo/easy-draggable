@@ -143,7 +143,6 @@ const Draggable = React.forwardRef<HTMLElement, DraggableProps>((props, ref) => 
     });
     let frameId = getFrameId();
     if (frameId) {
-      console.log('阻止无效的刷新');
       return false;
     }
     draggableCoreData.node.style.transform = style.transform;
