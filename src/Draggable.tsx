@@ -96,7 +96,6 @@ const Draggable = React.forwardRef<HTMLElement, DraggableProps>((props, ref) => 
   }, []);
   const onDrag: DraggableEventHandler = useCallback((event, draggableCoreData) => {
     if (!refDragging.current) return false;
-
     // const { x, y } = refDraggablePosition.current;
     const { x, y } = getDraggablePosition();
     const uiData = createDraggableData(x, y, scale, draggableCoreData);
@@ -105,17 +104,12 @@ const Draggable = React.forwardRef<HTMLElement, DraggableProps>((props, ref) => 
       x: (canDragX(axis) && draggable) ? x : validPosition.x,
       y: (canDragY(axis) && draggable) ? y : validPosition.y,
     };
-    // const newState = {
-    //   x: uiData.x,
-    //   y: uiData.y,
-    // };
     let newStateX = uiData.x;
     let newStateY = uiData.y;
 
     let newSlackX = slackX;
     let newSlackY = slackY;
     if (bounds) {
-      // const { x: originX, y: originY } = newState;
       const originX = newStateX;
       const originY = newStateY;
 
@@ -137,12 +131,6 @@ const Draggable = React.forwardRef<HTMLElement, DraggableProps>((props, ref) => 
     if (props.onDrag) {
       const shouldUpdate = props.onDrag(event, uiData);
     }
-    // setRefX(newStateX);
-    // setRefY(newStateY);
-    // setRefDraggablePosition({
-    //   x: newStateX,
-    //   y: newStateY,
-    // });
     const style = createCSSTransform(transformOpts, positionOffset);
     const elementProps = {
       style: { ...children.props.style, ...style },
@@ -153,7 +141,6 @@ const Draggable = React.forwardRef<HTMLElement, DraggableProps>((props, ref) => 
       x: newStateX,
       y: newStateY,
     });
-    
     let frameId = getFrameId();
     if (frameId) {
       console.log('阻止无效的刷新');
@@ -165,7 +152,6 @@ const Draggable = React.forwardRef<HTMLElement, DraggableProps>((props, ref) => 
       setFrameId(null);
     });
     setFrameId(frameId);
-    
     // setState({
     //   x: newStateX,
     //   y: newStateY,

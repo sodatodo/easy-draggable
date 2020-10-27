@@ -168,16 +168,17 @@ const DraggableCore = React.forwardRef<HTMLElement, DraggableCoreProps>((props, 
 
     const { lastX, lastY } = getLastPosition();
 
+    // grid 处理逻辑 暂时有问题
     if (Array.isArray(grid)) {
-      console.log('enter array handler');
       let deltaX = x - lastX;
       let deltaY = y - lastY;
+
       [deltaX, deltaY] = snapToGrid(grid as [number, number], deltaX, deltaY);
       if (!deltaX && !deltaY) return;
-      x = lastX + deltaY;
+      x = lastX + deltaX;
       y = lastY + deltaY;
     }
-
+    // console.log('y, lastY :>> ', y, lastY);
     const coreEvent = createCoreData(findRootDOM(), lastX, lastY, x, y);
     // if (mounted === false) {
 

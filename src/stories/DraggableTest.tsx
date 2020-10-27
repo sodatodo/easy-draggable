@@ -1,9 +1,9 @@
 import React, { useEffect, useRef } from 'react';
 import ReactEcharts from 'echarts-for-react'
-import Draggable from '../';
+import Draggable, { Direction } from '../';
 import './DraggableTest.css';
 
-function DraggableTest() {
+function DraggableTest(props: any) {
   const ref = useRef(null);
   useEffect(() => {
     // console.log('ref.current :>> ', ref.current);
@@ -21,11 +21,23 @@ function DraggableTest() {
       type: 'line'
     }]
   };
+  let axisValue = Direction.both;
+  
+  const { axis, grid, bounds } = props;
+  if (axis && axis === 'x') {
+    axisValue = Direction.x;
+  } else if (axis && axis === 'y') {
+    axisValue = Direction.y;
+  } else if (axis && axis === 'none') {
+    axisValue = Direction.none;
+  }
+
+  // console.log('axisValue :>> ', Direction[axisValue]);
   return (
     <div>
-      <Draggable ref={ref} >
+      <Draggable axis={axisValue} grid={grid} bounds={bounds}>
         <div className="box">
-          {/* <ReactEcharts option={option} /> */}
+          <ReactEcharts option={option} />
         </div>
       </Draggable>
       {/* <Draggable ref={ref} >
