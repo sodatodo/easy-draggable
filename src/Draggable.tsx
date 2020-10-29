@@ -19,10 +19,11 @@ interface DraggableProps {
   grid?: number[],
   position?: Position,
   defaultPosition?: Position,
-  axis: Direction,
-  positionOffset: PositionOffsetControlPosition,
+  axis?: Direction,
+  positionOffset?: PositionOffsetControlPosition,
   scale?: number,
   onStart?: DraggableEventHandler,
+  onStop?: DraggableEventHandler,
   bounds?: Bounds | string,
   onDrag?: DraggableEventHandler
 }
@@ -43,7 +44,7 @@ const Draggable = React.forwardRef<HTMLElement, DraggableProps>((props, ref) => 
     setDragged(value);
   };
   const {
-    children, grid, onStart, position, defaultPosition, axis, positionOffset, scale, bounds,
+    children, grid, onStart, onStop, position, defaultPosition, axis, positionOffset, scale, bounds,
   } = props;
   const controlled = Boolean(position);
   // const [draggablePosition, setDraggablePosition] = useState(
@@ -93,6 +94,10 @@ const Draggable = React.forwardRef<HTMLElement, DraggableProps>((props, ref) => 
     setRefDragged(true);
   }, []);
   const onDragStop: DraggableEventHandler = useCallback((event, draggableCoreData) => {
+    console.log('sodalog on dragstop');
+    if (onStop) {
+      onStop(event, draggableCoreData);
+    }
   }, []);
   const onDrag: DraggableEventHandler = useCallback((event, draggableCoreData) => {
     if (!refDragging.current) return false;
@@ -145,7 +150,8 @@ const Draggable = React.forwardRef<HTMLElement, DraggableProps>((props, ref) => 
     if (frameId) {
       return false;
     }
-    draggableCoreData.node.style.transform = style.transform;
+    const targetNode = draggableCoreData.node;
+    targetNode.style.transform = style.transform;
 
     frameId = requestAnimationFrame(() => {
       setFrameId(null);
