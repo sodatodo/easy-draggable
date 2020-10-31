@@ -28,7 +28,7 @@ interface DraggableProps {
   onDrag?: DraggableEventHandler
 }
 
-const Draggable = React.forwardRef<HTMLElement, DraggableProps>((props, ref) => {
+const Draggable = React.forwardRef<HTMLElement, DraggableProps>((props: DraggableProps, ref: any) => {
   // const [getState, setState] = applyState({ x: 0, y: 0 });
   // const [getCurrentState, setCurrentState] = applyState({ z: 0, e: 0 });
   const [dragging, setDragging] = useState(false);

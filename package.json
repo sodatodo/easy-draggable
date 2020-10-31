@@ -1,12 +1,14 @@
 {
   "name": "easy-draggable",
-  "version": "0.0.3",
+  "version": "0.0.8",
   "description": "",
-  "main": "dist/index.js",
+  "main": "dist/easy-draggable.js",
+  "module": "dist/easy-draggable.es.js",
+  "types": "dist/index.d.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "cross-env NODE_ENV=development rollup -c -w",
-    "build": "rollup -c --enviroment INCLUDE_DEPS,BUILD:production",
+    "build": "rimraf dist && NODE_ENV=production rollup -c",
     "storybook": "start-storybook -p 6006",
     "build-storybook": "build-storybook"
   },
@@ -21,42 +23,28 @@
     "url": "https://github.com/sodatodo/easy-draggable/issues"
   },
   "homepage": "https://github.com/sodatodo/easy-draggable#readme",
-  "dependencies": {
-    "prop-types": "^15.7.2",
-    "react": "^16.13.1",
-    "react-dom": "^16.13.1",
-    "rollup-plugin-typescript2": "^0.28.0"
+  "peerDependencies": {
+    "prop-types": ">=15.7.2",
+    "react": ">=17.0.1",
+    "react-dom": ">=17.0.1"
   },
   "devDependencies": {
-    "@babel/core": "^7.11.6",
-    "@babel/plugin-transform-runtime": "^7.12.1",
-    "@babel/preset-env": "^7.12.1",
-    "@babel/preset-react": "^7.12.1",
-    "@babel/preset-typescript": "^7.12.1",
+    "@babel/core": "^7.12.3",
     "@rollup/plugin-babel": "^5.2.1",
-    "@rollup/plugin-commonjs": "^15.1.0",
-    "@rollup/plugin-json": "^4.1.0",
-    "@storybook/addon-actions": "^6.0.26",
-    "@storybook/addon-essentials": "^6.0.26",
-    "@storybook/addon-links": "^6.0.26",
-    "@storybook/react": "^6.0.26",
-    "@types/react-dom": "^16.9.8",
-    "@typescript-eslint/eslint-plugin": "^4.1.1",
-    "@typescript-eslint/parser": "^4.1.1",
-    "babel-loader": "^8.1.0",
-    "cross-env": "^7.0.2",
-    "echarts": "^4.9.0",
-    "echarts-for-react": "^2.0.16",
-    "eslint": "^7.9.0",
-    "eslint-config-airbnb": "^18.2.0",
-    "eslint-plugin-import": "^2.22.0",
-    "eslint-plugin-jsx-a11y": "^6.3.1",
-    "eslint-plugin-react": "^7.20.6",
-    "eslint-plugin-react-hooks": "^4.1.2",
-    "react-is": "^16.13.1",
-    "rollup": "^2.27.1",
+    "@rollup/plugin-commonjs": "^16.0.0",
+    "@rollup/plugin-node-resolve": "^10.0.0",
+    "@types/prop-types": "^15.7.3",
+    "@types/react": "^16.9.55",
+    "babel-preset-react-app": "^10.0.0",
+    "rimraf": "^3.0.2",
+    "rollup": "^2.32.1",
     "rollup-plugin-node-resolve": "^5.2.0",
-    "rollup-plugin-typescript": "^1.0.1",
-    "typescript": "^4.0.3"
+    "rollup-plugin-typescript2": "^0.29.0",
+    "typescript": "^4.0.5"
+  },
+  "dependencies": {
+    "prop-types": "^15.7.2",
+    "react": "^17.0.1",
+    "react-dom": "^17.0.1"
   }
 }
