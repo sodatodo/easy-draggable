@@ -29,8 +29,6 @@ interface DraggableProps {
 }
 
 const Draggable = React.forwardRef<HTMLElement, DraggableProps>((props: DraggableProps, ref: any) => {
-  // const [getState, setState] = applyState({ x: 0, y: 0 });
-  // const [getCurrentState, setCurrentState] = applyState({ z: 0, e: 0 });
   const [dragging, setDragging] = useState(false);
   const refDragging = useRef(dragging);
   const setRefDragging = (value: boolean) => {
@@ -54,24 +52,6 @@ const Draggable = React.forwardRef<HTMLElement, DraggableProps>((props: Draggabl
     controlled ? position : defaultPosition,
   );
   const [getFrameId, setFrameId] = applyState(null);
-  // const [x, setX] = useState(controlled ? position.x : defaultPosition.x);
-  // const [y, setY] = useState(controlled ? position.y : defaultPosition.y);
-  // const refDraggablePosition = useRef(draggablePosition);
-  // const setRefDraggablePosition = (position: Position) => {
-  //   refDraggablePosition.current = position;
-  //   setDraggablePosition(position);
-  // };
-  // const refX = useRef(x);
-  // const setRefX = (value: number) => {
-  //   refX.current = value;
-  //   setX(value);
-  // };
-
-  // const refY = useRef(y);
-  // const setRefY = (value: number) => {
-  //   refY.current = value;
-  //   setY(value);
-  // };
 
   const [slackX, setSlackX] = useState(0);
   const [slackY, setSlackY] = useState(0);
@@ -101,7 +81,6 @@ const Draggable = React.forwardRef<HTMLElement, DraggableProps>((props: Draggabl
   }, []);
   const onDrag: DraggableEventHandler = useCallback((event, draggableCoreData) => {
     if (!refDragging.current) return false;
-    // const { x, y } = refDraggablePosition.current;
     const { x, y } = getDraggablePosition();
     const uiData = createDraggableData(x, y, scale, draggableCoreData);
 
@@ -157,15 +136,6 @@ const Draggable = React.forwardRef<HTMLElement, DraggableProps>((props: Draggabl
       setFrameId(null);
     });
     setFrameId(frameId);
-    // setState({
-    //   x: newStateX,
-    //   y: newStateY,
-    // });
-    // setCurrentState({
-    //   z: newStateX + 1,
-    //   e: newStateY + 1,
-    // });
-    // if (shouldUpdate === false) return false;
   }, []);
 
   const draggable = !controlled || dragging;
